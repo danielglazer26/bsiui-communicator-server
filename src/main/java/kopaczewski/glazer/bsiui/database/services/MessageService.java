@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -23,19 +24,19 @@ public class MessageService {
         this.messageRepository = messageRepository;
     }
 
-    public Message createNewMessage(Conversation conversation, Person person, String message, String dateTime) {
+    public Message createNewMessage(Conversation conversation, Person person, String message) {
         String whoDoesntGetMessage = conversation.getConversationParticipants().stream()
                 .filter(conPer -> !Objects.equals(conPer.getPersonId(), person.getPersonId()))
                 .map(Person::getLogin)
                 .collect(Collectors.joining(","));
-        return messageRepository.save(new Message(0L, conversation, person, message, dateTime, whoDoesntGetMessage));
+        return messageRepository.save(new Message(0L, conversation, person, message, OffsetDateTime.now().toString(), whoDoesntGetMessage));
     }
 
-    public List<Message> getAllMessagesForConversation(String conversationName, Long personId) {
-        return messageRepository.findAllByConversation_NameAndPerson_personId(conversationName, personId);
+    public List<Message> getAllMessagesForConversation(String conversationName) {
+        return messageRepository.findAllByConversation_Name(conversationName);
     }
 
-    public List<Message> getAllDoesntReadMessages(String login) {
+    public List<Message> getAllUnreadMessages(String login) {
         return messageRepository.findAllByPerson_personIdAndWhoDoesntGetMessageContains(login);
     }
 

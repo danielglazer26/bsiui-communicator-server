@@ -105,7 +105,7 @@ public class Server {
     }
 
     private void makeClientAction(BufferedReader in, PrintWriter out) throws IOException {
-        // TODO Obsługa komunikacji z klientem, czytanie requestów i generowanie responsów
+        Long accountId = -1L;
         while (true) {
             String message = in.readLine();
             if (message.isEmpty()) {
@@ -116,13 +116,13 @@ public class Server {
 
             String actionName = json.getString(KEY_ACTION);
 
-            checkActionValidation(out, message, actionName);
+            checkActionValidation(out, message, actionName, accountId);
         }
     }
 
-    private void checkActionValidation(PrintWriter out, String message, String actionName) {
+    private void checkActionValidation(PrintWriter out, String message, String actionName, Long accountId) {
         if (communicatorOptions.containsKey(actionName)) {
-            JSONObject returnedData = communicatorOptions.get(actionName).runAction(message);
+            JSONObject returnedData = communicatorOptions.get(actionName).runAction(message, accountId);
             out.println(returnedData.toString());
         }
     }
