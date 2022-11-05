@@ -13,8 +13,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Override
     <S extends Message> S save(S entity);
 
-    @Query("select m from Message m where m.conversation.name = ?1 and m.person.personId = ?2")
-    List<Message> findAllByConversation_NameAndPerson_personId(String conversationName, Long personId);
+    @Query("select m from Message m where m.conversation.name = ?1")
+    List<Message> findAllByConversation_Name(String conversationName);
 
     @Query("select m from Message m where m.whoDoesntGetMessage like concat('%', ?1, '%')")
     List<Message> findAllByPerson_personIdAndWhoDoesntGetMessageContains(String login);
@@ -22,8 +22,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Transactional
     @Modifying
     @Query("update Message m set m.whoDoesntGetMessage = :whoDoesntGetMessage where m.messageId in :messageIds")
-    int updateWhoDoesntGetMessageByMessageId(@Param("whoDoesntGetMessage") String whoDoesntGetMessage, @Param(
-            "messageIds") List<Long> messageIds);
+    int updateWhoDoesntGetMessageByMessageId(@Param("whoDoesntGetMessage") String whoDoesntGetMessage,
+                                             @Param("messageIds") List<Long> messageIds);
 
 
 }
