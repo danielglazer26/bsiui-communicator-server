@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +32,10 @@ public class TestDatabase {
     public void start() {
         Person person = personService.createNewPerson("login", "haslo");
         Person person2 = personService.createNewPerson("login2", "haslo2");
+        Person person3 = personService.createNewPerson("login2", "haslo2");
+        if (Objects.isNull(person3)) {
+            System.out.println("person3 is Null");
+        }
         Conversation conversation = conversationService.createNewConversation("to jest konwersacja", List.of(person, person2));
         Conversation conversation2 = conversationService.createNewConversation("to jest konwersacja 2", List.of(person, person2));
         person = personService.getPersonById(1L).orElse(person);
