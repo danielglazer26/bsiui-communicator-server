@@ -19,6 +19,6 @@ public class Conversation {
     private Long conversationId;
     private String name;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     Set<Person> conversationParticipants;
 }

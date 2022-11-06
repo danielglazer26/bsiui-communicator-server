@@ -20,6 +20,6 @@ public class Person {
     private String login;
     private String passwordHash;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     Set<Conversation> userConversations;
 }

@@ -26,7 +26,7 @@ public class GetUnreadMessagesAction extends CommunicatorActions {
                 person.getLogin(),
                 messages);
 
-        //TODO Response
+        // TODO Response
         return new JSONObject();
     }
 
