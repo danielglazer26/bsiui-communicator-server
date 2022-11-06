@@ -1,5 +1,6 @@
 package kopaczewski.glazer.bsiui.server;
 
+import com.google.common.hash.Hashing;
 import kopaczewski.glazer.bsiui.communicator.actions.CommunicatorActions;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -9,21 +10,29 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.net.SocketException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.security.*;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.*;
 
 @Component
 public class Server {
     private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
-    public static final String KEY_ACTION = "action";
 
     private final Set<Integer> lockedSocketPorts = new HashSet<>();
 
@@ -38,30 +47,39 @@ public class Server {
 
     @PostConstruct
     public void start() {
+        try {
+            serverSocket = new ServerSocket(this.port);
+        } catch (IOException e) {
+            LOGGER.error("CAN'T START SERVER", e);
+        }
+
         while (true) {
             try {
-                serverSocket = new ServerSocket(this.port);
-
                 Socket clientSocket = serverSocket.accept();
-
                 receiveClientGreetings(clientSocket);
-
                 clientSocket.close();
             } catch (IOException e) {
                 LOGGER.error("Server stop working", e);
-            } finally {
-                try {
-                    serverSocket.close();
-                } catch (IOException ignored) {
-                }
             }
         }
+// TODO
+//        try {
+//            serverSocket.close();
+//        } catch (IOException ignored) {
+//        }
     }
 
     private void receiveClientGreetings(Socket clientSocket) throws IOException {
+        LOGGER.info("NEW CLIENT TRY TO CONNECT");
+        clientSocket.setSoTimeout(2000);
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        if (!in.readLine().isEmpty()) {
-            moveClientToAnotherPort(clientSocket);
+        try{
+            String greetings = in.readLine();
+            if (!greetings.isEmpty()) {
+                moveClientToAnotherPort(clientSocket);
+            }
+        }catch(NullPointerException n){
+            n.printStackTrace();
         }
         in.close();
     }
@@ -71,8 +89,8 @@ public class Server {
         int newClientPort = generateNewPortForClient();
         out.println(newClientPort);
         out.close();
+        LOGGER.info("NEW CLIENT ON PORT = " + newClientPort);
         runClientThread(newClientPort);
-
     }
 
     private void runClientThread(int clientPort) {
@@ -82,7 +100,8 @@ public class Server {
     private void startConnectionOnNewPort(int clientPort) {
         try (ServerSocket clientServerSocket = new ServerSocket(clientPort)) {
             try (Socket clientSocket = clientServerSocket.accept()) {
-                startCommunicationWithClient(clientSocket);
+                Connection connection = new Connection(clientSocket, clientPort);
+                connection.startConnection();
             }
         } catch (IOException e) {
             LOGGER.error("Client closed with port: " + clientPort, e);
@@ -91,46 +110,9 @@ public class Server {
         }
     }
 
-    private void startCommunicationWithClient(Socket clientSocket) throws IOException {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
-            try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
-                makeHandshake(in, out);
-                makeClientAction(in, out);
-            }
-        }
-    }
-
-    private void makeHandshake(BufferedReader in, PrintWriter out) {
-
-    }
-
-    private void makeClientAction(BufferedReader in, PrintWriter out) throws IOException {
-        // TODO Obsługa komunikacji z klientem, czytanie requestów i generowanie responsów
-        while (true) {
-            String message = in.readLine();
-            if (message.isEmpty()) {
-                continue;
-            }
-
-            JSONObject json = new JSONObject(message);
-
-            String actionName = json.getString(KEY_ACTION);
-
-            checkActionValidation(out, message, actionName);
-        }
-    }
-
-    private void checkActionValidation(PrintWriter out, String message, String actionName) {
-        if (communicatorOptions.containsKey(actionName)) {
-            JSONObject returnedData = communicatorOptions.get(actionName).runAction(message);
-            out.println(returnedData.toString());
-        }
-    }
-
     private int generateNewPortForClient() {
         while (true) {
             int randomNumber = new Random().nextInt(30000) + 15000;
-
             if (!lockedSocketPorts.contains(randomNumber)) {
                 lockedSocketPorts.add(randomNumber);
                 return randomNumber;
@@ -138,10 +120,7 @@ public class Server {
         }
     }
 
-
     public void stop() throws IOException {
         serverSocket.close();
     }
-
-
 }
