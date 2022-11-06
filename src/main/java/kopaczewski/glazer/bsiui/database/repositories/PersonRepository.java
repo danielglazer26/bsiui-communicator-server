@@ -21,6 +21,8 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
 
     Optional<Person> findPersonByPersonId(Long personId);
 
+    Person findSignInPersonByPersonId(Long personId);
+
     @Override
     List<Person> findAll();
 
