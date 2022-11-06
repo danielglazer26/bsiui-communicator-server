@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,11 +18,10 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Query("select m from Message m where m.whoDoesntGetMessage like concat('%', ?1, '%')")
     List<Message> findAllByPerson_personIdAndWhoDoesntGetMessageContains(String login);
 
-    @Transactional
     @Modifying
-    @Query("update Message m set m.whoDoesntGetMessage = :whoDoesntGetMessage where m.messageId in :messageIds")
+    @Query("update Message m set m.whoDoesntGetMessage = :whoDoesntGetMessage where m.messageId = :messageId")
     int updateWhoDoesntGetMessageByMessageId(@Param("whoDoesntGetMessage") String whoDoesntGetMessage,
-                                             @Param("messageIds") List<Long> messageIds);
+                                             @Param("messageId") Long messageId);
 
 
 }

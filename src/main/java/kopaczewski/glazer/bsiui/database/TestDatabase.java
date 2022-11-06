@@ -1,7 +1,6 @@
 package kopaczewski.glazer.bsiui.database;
 
 import kopaczewski.glazer.bsiui.database.entities.Conversation;
-import kopaczewski.glazer.bsiui.database.entities.Message;
 import kopaczewski.glazer.bsiui.database.entities.Person;
 import kopaczewski.glazer.bsiui.database.services.ConversationService;
 import kopaczewski.glazer.bsiui.database.services.MessageService;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 public class TestDatabase {
@@ -48,6 +46,6 @@ public class TestDatabase {
         messageService.getAllUnreadMessages(person2.getLogin()).forEach(message -> System.out.println(message.getConversation().getName() + " " + message.getMessage()));
         System.out.println("Liczba zaktualizowanych kolumn: " + messageService.updateReadMessageStatus(
                 person.getLogin(),
-                messageService.getAllUnreadMessages(person.getLogin()).stream().map(Message::getMessageId).collect(Collectors.toList())));
+                messageService.getAllUnreadMessages(person.getLogin())));
     }
 }

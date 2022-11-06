@@ -6,15 +6,16 @@ import kopaczewski.glazer.bsiui.database.services.ConversationService;
 import kopaczewski.glazer.bsiui.database.services.MessageService;
 import kopaczewski.glazer.bsiui.database.services.PersonService;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
-import static kopaczewski.glazer.bsiui.ConstStorage.KEY_LOGIN;
-import static kopaczewski.glazer.bsiui.ConstStorage.KEY_PASSWORD;
+import static kopaczewski.glazer.bsiui.ConstStorage.*;
 
 @Component("register")
+@Qualifier(QUALIFIER_AUTHORIZATION)
 public class RegisterAction extends CommunicatorActions {
 
     public RegisterAction(PersonService personService, MessageService messageService, ConversationService conversationService) {

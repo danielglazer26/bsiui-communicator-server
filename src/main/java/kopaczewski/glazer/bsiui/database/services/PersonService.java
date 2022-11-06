@@ -60,6 +60,10 @@ public class PersonService {
         return personRepository.findPersonByPersonId(id);
     }
 
+    public Person getSignInPersonById(Long id) {
+        return personRepository.findSignInPersonByPersonId(id);
+    }
+
     public List<Person> getAllPeople() {
         return personRepository.findAll();
     }

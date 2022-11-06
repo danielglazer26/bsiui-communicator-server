@@ -28,10 +28,7 @@ public class MessageAction extends CommunicatorActions {
     public JSONObject runAction(String body, Long accountId) {
         JSONObject jsonObject = getBodyFromJson(body);
 
-        Optional<Person> person = personService.getPersonById(accountId);
-        if (person.isEmpty()) {
-            return new JSONObject(new ResponseData(HttpStatus.BAD_REQUEST, "You have to be sign in"));
-        }
+        Person person = personService.getSignInPersonById(accountId);
 
         Optional<Conversation> conversation = conversationService.getConversationsByName(jsonObject.getString(KEY_CONVERSATION));
         if (conversation.isEmpty()) {
@@ -40,7 +37,7 @@ public class MessageAction extends CommunicatorActions {
 
         Message message = messageService.createNewMessage(
                 conversation.get(),
-                person.get(),
+                person,
                 jsonObject.getString(KEY_CONTENT)
         );
 
