@@ -62,11 +62,11 @@ public class Server {
                 LOGGER.error("Server stop working", e);
             }
         }
-// TODO
-//        try {
-//            serverSocket.close();
-//        } catch (IOException ignored) {
-//        }
+    // TODO
+    //        try {
+    //            serverSocket.close();
+    //        } catch (IOException ignored) {
+    //        }
     }
 
     private void receiveClientGreetings(Socket clientSocket) throws IOException {

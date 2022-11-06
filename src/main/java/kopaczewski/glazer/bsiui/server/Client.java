@@ -17,7 +17,6 @@ import static kopaczewski.glazer.bsiui.encryption.Encryption.encryptHugeText;
 
 public class Client {
     private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
-
     public static final String connectionMessage = "Hi!";
 
     public static void main(String[] args) throws Exception {
@@ -64,20 +63,22 @@ public class Client {
         LOGGER.info("ENCODED CONTROL MESSAGE = " + encodedControlMessage);
         out.println(encodedControlMessage);
 
+        // get control message hash from server
         String controlHashFromServer = in.readLine();
         LOGGER.info("CONTROL HASH = " + controlHashFromServer);
 
+        // decode hash
         String decodedHashFromServer = decryptHugeText(controlHashFromServer, clientPrivateKey);
         LOGGER.info("ENCODED CONTROL HASH = " + decodedHashFromServer);
 
-
+        // hash control message in client
         String controlHashTest = Hashing
                 .sha256()
                 .hashString(controlMessage + clientPublicKeyString, StandardCharsets.UTF_8)
                 .toString();
-
         LOGGER.info("CLIENT CODED HASH = " + controlHashTest);
 
+        // check is hash the same
         if (controlHashTest.equals(decodedHashFromServer)) {
             LOGGER.info("SERVER VERIFIED");
             while (true) {
@@ -87,8 +88,6 @@ public class Client {
         } else {
             LOGGER.info("SERVER IS NOT TRUSTED");
         }
-
-
     }
 
     private static String controlMessageGenerator(int length) {
