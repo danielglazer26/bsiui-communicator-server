@@ -67,7 +67,7 @@ public class Server {
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         try {
             String greetings = in.readLine();
-            if (!greetings.isEmpty()) {
+            if (greetings != null && !greetings.isEmpty()) {
                 moveClientToAnotherPort(clientSocket);
             }
         } catch (NullPointerException n) {

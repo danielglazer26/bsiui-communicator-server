@@ -103,7 +103,7 @@ public class Connection {
         while (true) {
             String message = socketReader.readLine();
 
-            if (message.isEmpty()) {
+            if (message != null && message.isEmpty()) {
                 continue;
             }
 

@@ -41,7 +41,8 @@ public class CreateConversationAction extends CommunicatorActions {
 
         Conversation conversation = conversationService.createNewConversation(conversationName, people);
 
-        boolean status = Objects.isNull(conversation);
+        boolean status = !Objects.isNull(conversation);
+
         return new JSONObject(
                 new ResponseData(
                         status ? HttpStatus.OK : HttpStatus.BAD_REQUEST,
