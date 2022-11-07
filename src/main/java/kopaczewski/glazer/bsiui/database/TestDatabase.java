@@ -1,6 +1,5 @@
 package kopaczewski.glazer.bsiui.database;
 
-import kopaczewski.glazer.bsiui.database.entities.Conversation;
 import kopaczewski.glazer.bsiui.database.entities.Person;
 import kopaczewski.glazer.bsiui.database.services.ConversationService;
 import kopaczewski.glazer.bsiui.database.services.MessageService;
@@ -9,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
-import java.util.Objects;
 
 @Service
 public class TestDatabase {
@@ -29,9 +26,9 @@ public class TestDatabase {
     @PostConstruct
     public void start() {
         Person person = personService.createNewPerson("login", "pass");
-        Person person2 = personService.createNewPerson("login2", "pass2");
+        /*Person person2 = personService.createNewPerson("login2", "pass2");
         Person person3 = personService.createNewPerson("root", "root");
-/*        Person person3 = personService.createNewPerson("login2", "haslo2");
+        Person person3 = personService.createNewPerson("login2", "haslo2");
         if (Objects.isNull(person3)) {
             System.out.println("person3 is Null");
         }
@@ -47,6 +44,7 @@ public class TestDatabase {
         messageService.getAllUnreadMessages(person2.getLogin()).forEach(message -> System.out.println(message.getConversation().getName() + " " + message.getMessage()));
         System.out.println("Liczba zaktualizowanych kolumn: " + messageService.updateReadMessageStatus(
                 person.getLogin(),
-                messageService.getAllUnreadMessages(person.getLogin())));*/
+                messageService.getAllUnreadMessages(person.getLogin())));
+*/
     }
 }

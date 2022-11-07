@@ -31,7 +31,7 @@ public class Server {
 
     private ServerSocket serverSocket;
 
-    public static  Map<String, CommunicatorActions> communicatorOptions;
+    public static Map<String, CommunicatorActions> communicatorOptions;
     public static Map<String, CommunicatorActions> authorizationOptions;
 
     @Value("${socket.port}")
@@ -86,7 +86,9 @@ public class Server {
     }
 
     private void runClientThread(int clientPort) {
-        new Thread(() -> startConnectionOnNewPort(clientPort)).start();
+        Thread thread = new Thread(() -> startConnectionOnNewPort(clientPort));
+        thread.setName("Port: " + clientPort);
+        thread.start();
     }
 
     private void startConnectionOnNewPort(int clientPort) {
@@ -118,12 +120,12 @@ public class Server {
 
     @Autowired
     public void setCommunicatorOptions(Map<String, CommunicatorActions> communicatorOptions) {
-        this.communicatorOptions = communicatorOptions;
+        Server.communicatorOptions = communicatorOptions;
     }
 
     @Autowired
     @Qualifier(QUALIFIER_AUTHORIZATION)
     public void setAuthorizationOptions(Map<String, CommunicatorActions> authorizationOptions) {
-        this.authorizationOptions = authorizationOptions;
+        Server.authorizationOptions = authorizationOptions;
     }
 }

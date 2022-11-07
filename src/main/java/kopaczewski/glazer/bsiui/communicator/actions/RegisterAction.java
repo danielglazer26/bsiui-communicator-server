@@ -6,6 +6,7 @@ import kopaczewski.glazer.bsiui.database.services.ConversationService;
 import kopaczewski.glazer.bsiui.database.services.MessageService;
 import kopaczewski.glazer.bsiui.database.services.PersonService;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ import static kopaczewski.glazer.bsiui.ConstStorage.*;
 @Qualifier(QUALIFIER_AUTHORIZATION)
 public class RegisterAction extends CommunicatorActions {
 
+    @Autowired
     public RegisterAction(PersonService personService, MessageService messageService, ConversationService conversationService) {
         super(personService, messageService, conversationService);
     }

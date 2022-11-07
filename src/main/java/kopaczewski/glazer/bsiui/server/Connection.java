@@ -85,7 +85,7 @@ public class Connection {
 
     private void startCommunicationWithClient() throws IOException {
         try {
-            clientSocket.setSoTimeout(2000);
+            clientSocket.setSoTimeout(15000);
             socketReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             socketWriter = new PrintWriter(clientSocket.getOutputStream(), true);
             if (makeHandshake()) {
@@ -130,7 +130,7 @@ public class Connection {
     private Long checkActionAuthorizationValidation(String message, String actionName) {
         JSONObject returnedData;
         if (authorizationOptions.containsKey(actionName)) {
-            CommunicatorActions communicatorActions = communicatorOptions.get(actionName);
+            CommunicatorActions communicatorActions = authorizationOptions.get(actionName);
             returnedData = communicatorActions.runAction(message, NotSignInUser);
             socketWriter.println(returnedData.toString());
 
