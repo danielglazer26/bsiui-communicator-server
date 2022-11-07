@@ -5,6 +5,7 @@ import kopaczewski.glazer.bsiui.communicator.actions.CommunicatorActions;
 import kopaczewski.glazer.bsiui.communicator.actions.LoginAction;
 import kopaczewski.glazer.bsiui.communicator.actions.data.ResponseData;
 import kopaczewski.glazer.bsiui.encryption.AES;
+import org.checkerframework.checker.index.qual.LengthOf;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +83,7 @@ public class Connection {
             LOGGER.info("USER " + accountId + " PERFORMED " + actionName + " WITH " + message);
             JSONObject returnedData = communicatorOptions.get(actionName).runAction(message, accountId);
             try {
-                socketWriter.println(AES.decrypt(returnedData.toString(), clientPublicKeyAES));
+                socketWriter.println(AES.encrypt(returnedData.toString(), clientPublicKeyAES));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -103,21 +104,20 @@ public class Connection {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("CAN'T INITIALIZE I/O");
+            LOGGER.error("START COMMUNICATION ERROR");
         }
 
     }
 
     private boolean getAESkeys() throws Exception {
         String aesKeys = socketReader.readLine();
-        LOGGER.error(aesKeys);
-        String encryptedAESkey = decryptHugeText(aesKeys, sessionPrivateKey);
-        LOGGER.error(encryptedAESkey);
-        clientPublicKeyAES = AES.secretKeyFromString(encryptedAESkey);
+        String encryptedAESKey = decryptHugeText(aesKeys, sessionPrivateKey);
+        clientPublicKeyAES = AES.secretKeyFromString(encryptedAESKey);
         return true;
     }
 
-    private Long runCommunicationLoop(LoopLambdaActionValidator loopLambdaActionValidator) throws IOException {
+    private Long
+    runCommunicationLoop(LoopLambdaActionValidator loopLambdaActionValidator) throws IOException {
         while (true) {
             String message = socketReader.readLine();
 
@@ -126,13 +126,12 @@ public class Connection {
             }
 
             try {
-                message = AES.encrypt(message, clientPublicKeyAES);
+                message = AES.decrypt(message, clientPublicKeyAES);
             } catch (Exception e) {
-                LOGGER.error("Bład przy formatowaniu");
+                LOGGER.error("AES FORMATTING ERROR");
             }
 
             JSONObject json = new JSONObject(message);
-
             String actionName = json.getString(KEY_ACTION);
 
             Long id = loopLambdaActionValidator.checkActionValidation(message, actionName);
@@ -151,24 +150,23 @@ public class Connection {
     }
 
 
-    private Long checkActionAuthorizationValidation(String message, String actionName) {
+    private Long checkActionAuthorizationValidation(String message, String actionName)  {
         JSONObject returnedData;
         if (authorizationOptions.containsKey(actionName)) {
             CommunicatorActions communicatorActions = authorizationOptions.get(actionName);
             returnedData = communicatorActions.runAction(message, NotSignInUser);
             try {
-                socketWriter.println(AES.decrypt(returnedData.toString(), clientPublicKeyAES));
+                socketWriter.println(AES.encrypt(returnedData.toString(), clientPublicKeyAES));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-
             if (actionName.equals(KEY_LOGIN)) {
                 return ((LoginAction) communicatorActions).getAccountId();
             }
         } else {
             returnedData = new JSONObject(new ResponseData(HttpStatus.BAD_REQUEST, "You have to be sign in"));
             try {
-                socketWriter.println(AES.decrypt(returnedData.toString(), clientPublicKeyAES));
+                socketWriter.println(AES.encrypt(returnedData.toString(), clientPublicKeyAES));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

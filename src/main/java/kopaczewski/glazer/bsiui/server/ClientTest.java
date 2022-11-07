@@ -7,6 +7,7 @@ import com.google.common.io.Files;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.KeyGenerator;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
@@ -18,12 +19,16 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Random;
 
+import static kopaczewski.glazer.bsiui.encryption.AES.decrypt;
+import static kopaczewski.glazer.bsiui.encryption.AES.encrypt;
 import static kopaczewski.glazer.bsiui.encryption.Encryption.decryptHugeText;
 import static kopaczewski.glazer.bsiui.encryption.Encryption.encryptHugeText;
 
-public class Client {
+public class ClientTest {
     public static final String connectionMessage = "Hi!";
     private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
+    private static final String host = "127.0.0.1";
+    private static final int controlMessageLength = 100;
 
     public static void main(String[] args) throws Exception {
 
@@ -36,7 +41,7 @@ public class Client {
         String clientPublicKeyString = Base64.getEncoder().encodeToString(clientPublicKey.getEncoded());
 
         // connect to server
-        Socket clientSocket = new Socket("127.0.0.1", 16123);
+        Socket clientSocket = new Socket(host, 16123);
         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         out.println(connectionMessage);
@@ -45,7 +50,7 @@ public class Client {
         clientSocket.close();
 
         // connection on new port
-        Socket connectedSocket = new Socket("127.0.0.1", currentPort);
+        Socket connectedSocket = new Socket(host, currentPort);
         out = new PrintWriter(connectedSocket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(connectedSocket.getInputStream()));
 
@@ -63,7 +68,7 @@ public class Client {
         PublicKey serverPublicKey = keyFactory.generatePublic(keySpecX509);
 
         // send control message
-        String controlMessage = controlMessageGenerator(100);
+        String controlMessage = controlMessageGenerator();
         LOGGER.info("CONTROL MESSAGE = " + controlMessage);
         String encodedControlMessage = encryptHugeText(controlMessage, serverPublicKey);
         LOGGER.info("ENCODED CONTROL MESSAGE = " + encodedControlMessage);
@@ -87,80 +92,55 @@ public class Client {
         // check is hash the same
         if (controlHashTest.equals(decodedHashFromServer)) {
             LOGGER.info("SERVER VERIFIED");
-            out.println("{\"action\": \"login\", \"body\":{\"login\":\"login2\",\"password\":\"pass2\"}}");
-            String status = in.readLine();
-            LOGGER.info("STATUS: " + status);
 
-            // create conversation
-            File file = new File("create_conversation_json.txt");
-            CharSource source = Files.asCharSource(file, Charsets.UTF_8);
-            String createConversationMessage = source.read();
-            System.out.println(createConversationMessage);
+            // send AES key
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+            keyGenerator.init(128);
+            Key aesKey = keyGenerator.generateKey();
+            String aesKeyString = Base64.getEncoder().encodeToString(aesKey.getEncoded());
+            out.println(encryptHugeText(aesKeyString, serverPublicKey));
 
-            out.println(createConversationMessage);
-
-            File file2 = new File("message_json.txt");
-            CharSource source2 = Files.asCharSource(file2, Charsets.UTF_8);
-            String messageJson = source2.read();
-
-            File file3 = new File("user_list_json.txt");
-            CharSource source3 = Files.asCharSource(file3, Charsets.UTF_8);
-            String messageJson3 = source3.read();
-
-            out.println(messageJson3);
-            String listUsers = in.readLine();
-            System.out.println(listUsers);
-
-            for(int i = 0; i < 5; i++){
-                Thread.sleep(1000);
-                String currentMessage = messageJson
-                        .replace("[1]", "testConversation")
-                        .replace("[2]", "test test test");
-                out.println(currentMessage);
-                String response = in.readLine();
-                LOGGER.info("MESSAGE: " + response);
-            }
-
-            File file4 = new File("get_messages.txt");
-            CharSource source4 = Files.asCharSource(file4, Charsets.UTF_8);
-            String messageJson4 = source4.read();
-
-            File file5 = new File("get_all_conversations.txt");
-            CharSource source5 = Files.asCharSource(file5, Charsets.UTF_8);
-            String messageJson5 = source5.read();
-
-            out.println(messageJson5);
-            String messagesList = in.readLine();
-            System.out.println(messagesList);
-
-            File file6 = new File("get_unreaded_json.txt");
-            CharSource source6 = Files.asCharSource(file6, Charsets.UTF_8);
-            String messageJson6 = source6.read();
-
-            out.println(messageJson6);
-            String unreadMessages = in.readLine();
-            System.out.println(unreadMessages);
-
-            out.println(messageJson6);
-            unreadMessages = in.readLine();
-            System.out.println(unreadMessages);
-
-
-            while(true){
-                Thread.sleep(5000);
-                out.println(messageJson4);
-                String listMessages = in.readLine();
-                System.out.println(listMessages);
-            }
-
+            System.out.println(sendGetMessage("register_json.txt", out, in, aesKey));
+            System.out.println(sendGetMessage("login_json.txt", out, in, aesKey));
+            System.out.println(sendGetMessage("create_conversation_json.txt", out, in, aesKey));
+            System.out.println(sendGetMessage("user_list_json.txt", out, in, aesKey));
+            sendTestMessages(1000, 5, out, in, aesKey);
+            System.out.println(sendGetMessage("get_messages_json.txt", out, in, aesKey));
+            System.out.println(sendGetMessage("get_unread_json.txt", out, in, aesKey));
+            System.out.println(sendGetMessage("get_unread_json.txt", out, in, aesKey));
+            sendTestMessages(5000, 100, out, in, aesKey);
         } else {
             LOGGER.info("SERVER IS NOT TRUSTED");
         }
+        clientSocket.close();
     }
 
-    private static String controlMessageGenerator(int length) {
-        byte[] array = new byte[length];
+    private static void sendTestMessages(
+            int sleepTime,
+            int messageNumber,
+            PrintWriter out,
+            BufferedReader in,
+            Key aesKey) throws Exception {
+        for (int i = 0; i < messageNumber; i++) {
+            Thread.sleep(sleepTime);
+            System.out.println(sendGetMessage("send_message_json.txt", out, in, aesKey));
+        }
+    }
+
+    private static String controlMessageGenerator() {
+        byte[] array = new byte[controlMessageLength];
         new Random().nextBytes(array);
         return Base64.getEncoder().encodeToString(array);
+    }
+
+    private static String sendGetMessage(String fileName, PrintWriter out, BufferedReader in, Key key) throws Exception {
+        File file = new File(fileName);
+        CharSource source = Files.asCharSource(file, Charsets.UTF_8);
+        String messageJson = source.read();
+        String encodedMsg = encrypt(messageJson, key);
+        out.println(encodedMsg);
+        String read = in.readLine();
+        System.out.println(read);
+        return decrypt(read, key);
     }
 }

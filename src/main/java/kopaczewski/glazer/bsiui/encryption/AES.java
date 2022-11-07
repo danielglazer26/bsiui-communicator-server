@@ -3,11 +3,12 @@ package kopaczewski.glazer.bsiui.encryption;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.Key;
 import java.util.Base64;
 
 public class AES {
 
-    public static String encrypt(String data, SecretKey key) throws Exception {
+    public static String encrypt(String data, Key key) throws Exception {
         Cipher encryptionCipher = Cipher.getInstance("AES");
         encryptionCipher.init(Cipher.ENCRYPT_MODE, key);
         byte[] encryptedMessageBytes =
@@ -17,7 +18,7 @@ public class AES {
         return encryptedMessage;
     }
 
-    public static String decrypt(String encryptedData, SecretKey key) throws Exception {
+    public static String decrypt(String encryptedData, Key key) throws Exception {
         Cipher decryptionCipher = Cipher.getInstance("AES");
         decryptionCipher.init(Cipher.DECRYPT_MODE, key);
         byte[] decryptedMessageBytes =

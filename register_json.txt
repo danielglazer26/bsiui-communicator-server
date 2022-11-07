@@ -1,0 +1,1 @@
+{"action": "register", body:{"login": "login", "password": "pass"}}
