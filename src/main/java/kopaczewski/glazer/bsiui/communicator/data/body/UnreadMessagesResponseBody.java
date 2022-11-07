@@ -1,6 +1,6 @@
-package kopaczewski.glazer.bsiui.communicator.actions.data;
+package kopaczewski.glazer.bsiui.communicator.data.body;
 
-import kopaczewski.glazer.bsiui.communicator.actions.dto.ConversationWithMessagesDTO;
+import kopaczewski.glazer.bsiui.communicator.dto.ConversationWithMessagesDTO;
 import lombok.Data;
 
 import java.util.List;

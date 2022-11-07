@@ -1,4 +1,4 @@
-package kopaczewski.glazer.bsiui.communicator.actions.dto;
+package kopaczewski.glazer.bsiui.communicator.dto;
 
 import lombok.Data;
 

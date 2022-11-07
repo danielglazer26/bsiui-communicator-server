@@ -1,9 +1,10 @@
-package kopaczewski.glazer.bsiui.server;
+package kopaczewski.glazer.bsiui.client;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import com.google.common.io.CharSource;
 import com.google.common.io.Files;
+import kopaczewski.glazer.bsiui.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,10 +20,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Random;
 
-import static kopaczewski.glazer.bsiui.encryption.AES.decrypt;
-import static kopaczewski.glazer.bsiui.encryption.AES.encrypt;
-import static kopaczewski.glazer.bsiui.encryption.Encryption.decryptHugeText;
-import static kopaczewski.glazer.bsiui.encryption.Encryption.encryptHugeText;
+import static kopaczewski.glazer.bsiui.server.encryption.Encryption.*;
 
 public class ClientTest {
     public static final String connectionMessage = "Hi!";
@@ -59,7 +57,7 @@ public class ClientTest {
 
         // get encoded server key
         String serverPublicKeyMessage = in.readLine();
-        String decodedServerKey = decryptHugeText(serverPublicKeyMessage, clientPrivateKey);
+        String decodedServerKey = decryptHugeTextRSA(serverPublicKeyMessage, clientPrivateKey);
         LOGGER.info("SERVER PUBLIC KEY = " + decodedServerKey);
 
         // get server public key as object
@@ -70,7 +68,7 @@ public class ClientTest {
         // send control message
         String controlMessage = controlMessageGenerator();
         LOGGER.info("CONTROL MESSAGE = " + controlMessage);
-        String encodedControlMessage = encryptHugeText(controlMessage, serverPublicKey);
+        String encodedControlMessage = encryptHugeTextRSA(controlMessage, serverPublicKey);
         LOGGER.info("ENCODED CONTROL MESSAGE = " + encodedControlMessage);
         out.println(encodedControlMessage);
 
@@ -79,7 +77,7 @@ public class ClientTest {
         LOGGER.info("CONTROL HASH = " + controlHashFromServer);
 
         // decode hash
-        String decodedHashFromServer = decryptHugeText(controlHashFromServer, clientPrivateKey);
+        String decodedHashFromServer = decryptHugeTextRSA(controlHashFromServer, clientPrivateKey);
         LOGGER.info("ENCODED CONTROL HASH = " + decodedHashFromServer);
 
         // hash control message in client
@@ -98,7 +96,7 @@ public class ClientTest {
             keyGenerator.init(128);
             Key aesKey = keyGenerator.generateKey();
             String aesKeyString = Base64.getEncoder().encodeToString(aesKey.getEncoded());
-            out.println(encryptHugeText(aesKeyString, serverPublicKey));
+            out.println(encryptHugeTextRSA(aesKeyString, serverPublicKey));
 
             System.out.println(sendGetMessage("register_json.txt", out, in, aesKey));
             System.out.println(sendGetMessage("login_json.txt", out, in, aesKey));
@@ -137,10 +135,10 @@ public class ClientTest {
         File file = new File(fileName);
         CharSource source = Files.asCharSource(file, Charsets.UTF_8);
         String messageJson = source.read();
-        String encodedMsg = encrypt(messageJson, key);
+        String encodedMsg = encryptAES(messageJson, key);
         out.println(encodedMsg);
         String read = in.readLine();
         System.out.println(read);
-        return decrypt(read, key);
+        return decryptAES(read, key);
     }
 }

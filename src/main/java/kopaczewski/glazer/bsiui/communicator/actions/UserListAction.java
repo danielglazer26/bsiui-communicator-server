@@ -1,7 +1,7 @@
 package kopaczewski.glazer.bsiui.communicator.actions;
 
-import kopaczewski.glazer.bsiui.communicator.actions.data.UsersListResponseBody;
-import kopaczewski.glazer.bsiui.communicator.actions.data.ResponseDataWithBody;
+import kopaczewski.glazer.bsiui.communicator.data.body.ResponseDataWithBody;
+import kopaczewski.glazer.bsiui.communicator.data.body.UsersListResponseBody;
 import kopaczewski.glazer.bsiui.database.entities.Person;
 import kopaczewski.glazer.bsiui.database.services.ConversationService;
 import kopaczewski.glazer.bsiui.database.services.MessageService;

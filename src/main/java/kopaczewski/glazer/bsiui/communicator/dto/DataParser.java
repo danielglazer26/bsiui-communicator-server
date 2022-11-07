@@ -1,4 +1,4 @@
-package kopaczewski.glazer.bsiui.communicator.actions.dto;
+package kopaczewski.glazer.bsiui.communicator.dto;
 
 import kopaczewski.glazer.bsiui.database.entities.Conversation;
 import kopaczewski.glazer.bsiui.database.entities.Message;

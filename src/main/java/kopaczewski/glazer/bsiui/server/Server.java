@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
@@ -24,41 +25,37 @@ import static kopaczewski.glazer.bsiui.ConstStorage.QUALIFIER_AUTHORIZATION;
 
 @Component
 public class Server {
-    public static final String KEY_ACTION = "action";
-    public static final long NotSignInUser = -1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
-    private final Set<Integer> lockedSocketPorts = new HashSet<>();
 
-    private ServerSocket serverSocket;
+    private final Set<Integer> lockedSocketPorts = new HashSet<>();
 
     public static Map<String, CommunicatorActions> communicatorOptions;
     public static Map<String, CommunicatorActions> authorizationOptions;
+
+    private static final int ONE_HOUR_MS = 3600000;
 
     @Value("${socket.port}")
     private int port;
 
     @PostConstruct
     public void start() {
-        try {
-            serverSocket = new ServerSocket(this.port);
+        try (ServerSocket serverSocket = new ServerSocket(this.port)) {
+            //serverSocket.setSoTimeout(ONE_HOUR_MS); // timeout po godzinie bez połączenia
+            while (true) {
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    receiveClientGreetings(clientSocket);
+                    clientSocket.close();
+                } catch (SocketTimeoutException e) {
+                    LOGGER.error("SERVER SOCKET TIMEOUT EXCEPTION", e);
+                    break;
+                } catch (IOException e) {
+                    LOGGER.error("Server stop working", e);
+                }
+            }
         } catch (IOException e) {
             LOGGER.error("CAN'T START SERVER", e);
         }
-
-        while (true) {
-            try {
-                Socket clientSocket = serverSocket.accept();
-                receiveClientGreetings(clientSocket);
-                clientSocket.close();
-            } catch (IOException e) {
-                LOGGER.error("Server stop working", e);
-            }
-        }
-        // TODO
-        //        try {
-        //            serverSocket.close();
-        //        } catch (IOException ignored) {
-        //        }
     }
 
     private void receiveClientGreetings(Socket clientSocket) throws IOException {
@@ -112,10 +109,6 @@ public class Server {
                 return randomNumber;
             }
         }
-    }
-
-    public void stop() throws IOException {
-        serverSocket.close();
     }
 
     @Autowired

@@ -1,4 +1,4 @@
-package kopaczewski.glazer.bsiui.communicator.actions.data;
+package kopaczewski.glazer.bsiui.communicator.data.body;
 
 import lombok.Data;
 

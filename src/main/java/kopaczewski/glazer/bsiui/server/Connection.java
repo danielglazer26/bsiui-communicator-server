@@ -3,9 +3,7 @@ package kopaczewski.glazer.bsiui.server;
 import com.google.common.hash.Hashing;
 import kopaczewski.glazer.bsiui.communicator.actions.CommunicatorActions;
 import kopaczewski.glazer.bsiui.communicator.actions.LoginAction;
-import kopaczewski.glazer.bsiui.communicator.actions.data.ResponseData;
-import kopaczewski.glazer.bsiui.encryption.AES;
-import org.checkerframework.checker.index.qual.LengthOf;
+import kopaczewski.glazer.bsiui.communicator.data.ResponseData;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
@@ -24,10 +23,9 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 import static kopaczewski.glazer.bsiui.ConstStorage.KEY_LOGIN;
-import static kopaczewski.glazer.bsiui.encryption.Encryption.decryptHugeText;
-import static kopaczewski.glazer.bsiui.encryption.Encryption.encryptHugeText;
 import static kopaczewski.glazer.bsiui.server.Server.authorizationOptions;
 import static kopaczewski.glazer.bsiui.server.Server.communicatorOptions;
+import static kopaczewski.glazer.bsiui.server.encryption.Encryption.*;
 
 public class Connection {
     private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
@@ -65,7 +63,7 @@ public class Connection {
         try {
             generateKeys();
             startCommunicationWithClient();
-        } catch (IOException | NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException e) {
             LOGGER.error("CONNECTION START ERROR");
         }
     }
@@ -82,38 +80,41 @@ public class Connection {
         if (communicatorOptions.containsKey(actionName)) {
             LOGGER.info("USER " + accountId + " PERFORMED " + actionName + " WITH " + message);
             JSONObject returnedData = communicatorOptions.get(actionName).runAction(message, accountId);
-            try {
-                socketWriter.println(AES.encrypt(returnedData.toString(), clientPublicKeyAES));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            sendResponse(returnedData);
         }
         return NotSignInUser;
     }
 
-    private void startCommunicationWithClient() throws IOException {
+    private void startCommunicationWithClient() {
         try {
             clientSocket.setSoTimeout(15000);
             socketReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             socketWriter = new PrintWriter(clientSocket.getOutputStream(), true);
             if (makeHandshake()) {
-                if (getAESkeys()) {
+                if (getAesKey()) {
                     clientSocket.setSoTimeout(600000);// 10 min
                     Long accountId = makeUserAuthorization();
                     makeClientAction(accountId);
                 }
             }
+        } catch (SocketException e) {
+            LOGGER.error("CLIENT SOCKET TIMEOUT EXCEPTION");
         } catch (Exception e) {
-            LOGGER.error("START COMMUNICATION ERROR");
+            LOGGER.error("CLIENT COMMUNICATION ERROR", e);
         }
 
     }
 
-    private boolean getAESkeys() throws Exception {
-        String aesKeys = socketReader.readLine();
-        String encryptedAESKey = decryptHugeText(aesKeys, sessionPrivateKey);
-        clientPublicKeyAES = AES.secretKeyFromString(encryptedAESKey);
-        return true;
+    private boolean getAesKey() {
+        try {
+            String aesKeys = socketReader.readLine();
+            String encryptedAESKey = decryptHugeTextRSA(aesKeys, sessionPrivateKey);
+            clientPublicKeyAES = secretKeyFromStringAES(encryptedAESKey);
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("AN ERROR OCCUR WHILE FORMATTING AES KEY", e);
+            return false;
+        }
     }
 
     private Long
@@ -126,7 +127,7 @@ public class Connection {
             }
 
             try {
-                message = AES.decrypt(message, clientPublicKeyAES);
+                message = decryptAES(message, clientPublicKeyAES);
             } catch (Exception e) {
                 LOGGER.error("AES FORMATTING ERROR");
             }
@@ -150,28 +151,28 @@ public class Connection {
     }
 
 
-    private Long checkActionAuthorizationValidation(String message, String actionName)  {
+    private Long checkActionAuthorizationValidation(String message, String actionName) {
         JSONObject returnedData;
         if (authorizationOptions.containsKey(actionName)) {
             CommunicatorActions communicatorActions = authorizationOptions.get(actionName);
             returnedData = communicatorActions.runAction(message, NotSignInUser);
-            try {
-                socketWriter.println(AES.encrypt(returnedData.toString(), clientPublicKeyAES));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            sendResponse(returnedData);
             if (actionName.equals(KEY_LOGIN)) {
                 return ((LoginAction) communicatorActions).getAccountId();
             }
         } else {
             returnedData = new JSONObject(new ResponseData(HttpStatus.BAD_REQUEST, "You have to be sign in"));
-            try {
-                socketWriter.println(AES.encrypt(returnedData.toString(), clientPublicKeyAES));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            sendResponse(returnedData);
         }
         return NotSignInUser;
+    }
+
+    private void sendResponse(JSONObject returnedData) {
+        try {
+            socketWriter.println(encryptAES(returnedData.toString(), clientPublicKeyAES));
+        } catch (Exception e) {
+            LOGGER.error("ERROR OCCURRED WHILE ENCRYPTING RESPONSE DATA", e);
+        }
     }
 
     private boolean makeHandshake() {
@@ -186,7 +187,7 @@ public class Connection {
                 try {
                     String sessionKey = Base64.getEncoder().encodeToString(sessionPublicKey.getEncoded());
                     if (debugOn) LOGGER.info("SERVER SESSION PUBLIC KEY = " + sessionKey);
-                    String encodedSessionKey = encryptHugeText(sessionKey, clientPublicKey);
+                    String encodedSessionKey = encryptHugeTextRSA(sessionKey, clientPublicKey);
                     socketWriter.println(encodedSessionKey);
 
                     try {
@@ -194,14 +195,14 @@ public class Connection {
                         if (debugOn) LOGGER.info("ENCODED CONTROL MESSAGE = " + encodedControlMessage);
 
                         try {
-                            String controlMessage = decryptHugeText(encodedControlMessage, sessionPrivateKey);
+                            String controlMessage = decryptHugeTextRSA(encodedControlMessage, sessionPrivateKey);
                             if (debugOn) LOGGER.info("DECODED CONTROL MESSAGE = " + controlMessage);
 
                             String controlHash = Hashing.sha256().hashString(controlMessage + clientPublicKeyMessage, StandardCharsets.UTF_8).toString();
                             if (debugOn) LOGGER.info("CONTROL HASH = " + controlHash);
 
                             try {
-                                String encodedControlHash = encryptHugeText(controlHash, clientPublicKey);
+                                String encodedControlHash = encryptHugeTextRSA(controlHash, clientPublicKey);
                                 if (debugOn) LOGGER.info("ENCODED CONTROL HASH = " + encodedControlHash);
                                 socketWriter.println(encodedControlHash);
                                 LOGGER.info("CLIENT VERIFIED ON PORT = " + port);

@@ -1,6 +1,6 @@
 package kopaczewski.glazer.bsiui.communicator.actions;
 
-import kopaczewski.glazer.bsiui.communicator.actions.data.ResponseData;
+import kopaczewski.glazer.bsiui.communicator.data.ResponseData;
 import kopaczewski.glazer.bsiui.database.entities.Conversation;
 import kopaczewski.glazer.bsiui.database.entities.Message;
 import kopaczewski.glazer.bsiui.database.entities.Person;

@@ -25,7 +25,7 @@ public class TestDatabase {
 
     @PostConstruct
     public void start() {
-        Person person = personService.createNewPerson("login", "pass");
+        Person person = personService.createNewPerson("root", "root");
         /*Person person2 = personService.createNewPerson("login2", "pass2");
         Person person3 = personService.createNewPerson("root", "root");
         Person person3 = personService.createNewPerson("login2", "haslo2");

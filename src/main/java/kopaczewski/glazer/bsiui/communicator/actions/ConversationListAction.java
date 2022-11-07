@@ -1,7 +1,7 @@
 package kopaczewski.glazer.bsiui.communicator.actions;
 
-import kopaczewski.glazer.bsiui.communicator.actions.data.ConversationListResponseBody;
-import kopaczewski.glazer.bsiui.communicator.actions.data.ResponseDataWithBody;
+import kopaczewski.glazer.bsiui.communicator.data.body.ConversationListResponseBody;
+import kopaczewski.glazer.bsiui.communicator.data.body.ResponseDataWithBody;
 import kopaczewski.glazer.bsiui.database.services.ConversationService;
 import kopaczewski.glazer.bsiui.database.services.MessageService;
 import kopaczewski.glazer.bsiui.database.services.PersonService;
@@ -9,7 +9,7 @@ import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
-import static kopaczewski.glazer.bsiui.communicator.actions.dto.DataParser.parseConversations;
+import static kopaczewski.glazer.bsiui.communicator.dto.DataParser.parseConversations;
 
 @Component("listConversations")
 public class ConversationListAction extends CommunicatorActions {

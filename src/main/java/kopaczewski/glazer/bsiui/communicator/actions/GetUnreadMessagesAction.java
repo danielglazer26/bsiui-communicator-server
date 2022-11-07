@@ -1,7 +1,7 @@
 package kopaczewski.glazer.bsiui.communicator.actions;
 
-import kopaczewski.glazer.bsiui.communicator.actions.data.ResponseDataWithBody;
-import kopaczewski.glazer.bsiui.communicator.actions.data.UnreadMessagesResponseBody;
+import kopaczewski.glazer.bsiui.communicator.data.body.ResponseDataWithBody;
+import kopaczewski.glazer.bsiui.communicator.data.body.UnreadMessagesResponseBody;
 import kopaczewski.glazer.bsiui.database.entities.Message;
 import kopaczewski.glazer.bsiui.database.entities.Person;
 import kopaczewski.glazer.bsiui.database.services.ConversationService;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static kopaczewski.glazer.bsiui.communicator.actions.dto.DataParser.parseConversationsWithMessages;
+import static kopaczewski.glazer.bsiui.communicator.dto.DataParser.parseConversationsWithMessages;
 
 @Component("getMessages")
 public class GetUnreadMessagesAction extends CommunicatorActions {
