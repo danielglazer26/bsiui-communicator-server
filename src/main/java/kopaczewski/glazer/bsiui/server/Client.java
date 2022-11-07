@@ -87,7 +87,7 @@ public class Client {
         // check is hash the same
         if (controlHashTest.equals(decodedHashFromServer)) {
             LOGGER.info("SERVER VERIFIED");
-            out.println("{\"action\": \"login\", \"body\":{\"login\":\"admin\",\"password\":\"admin\"}}");
+            out.println("{\"action\": \"login\", \"body\":{\"login\":\"login2\",\"password\":\"pass2\"}}");
             String status = in.readLine();
             LOGGER.info("STATUS: " + status);
 

@@ -28,8 +28,8 @@ public class TestDatabase {
 
     @PostConstruct
     public void start() {
-        Person person = personService.createNewPerson("login", "login");
-        Person person2 = personService.createNewPerson("admin", "admin");
+        Person person = personService.createNewPerson("login", "pass");
+        Person person2 = personService.createNewPerson("login2", "pass2");
         Person person3 = personService.createNewPerson("root", "root");
 /*        Person person3 = personService.createNewPerson("login2", "haslo2");
         if (Objects.isNull(person3)) {

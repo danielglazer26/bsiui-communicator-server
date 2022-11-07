@@ -14,8 +14,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     @Query("select m from Message m where m.conversation.name = ?1")
     List<Message> findAllByConversation_Name(String conversationName);
-
-    @Query("select m from Message m where m.whoDoesntGetMessage like concat('%', ?1, '%')")
+    @Query("select m from Message m where m.whoDoesntGetMessage like concat('%', ?1, ' *  %') OR m" +
+            ".whoDoesntGetMessage like concat('% * ', ?1, '%') OR  m.whoDoesntGetMessage = ?1")
     List<Message> findAllByPerson_personIdAndWhoDoesntGetMessageContains(String login);
 
     @Modifying

@@ -1,1 +1,1 @@
-{"action": "createConversation","body": {"name": "testConversation","users": [ "login", "admin"]}}
+{"action": "createConversation","body": {"name": "testConversation","users": [ "login", "login2"]}}
