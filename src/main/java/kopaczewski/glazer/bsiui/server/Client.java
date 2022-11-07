@@ -87,7 +87,7 @@ public class Client {
         // check is hash the same
         if (controlHashTest.equals(decodedHashFromServer)) {
             LOGGER.info("SERVER VERIFIED");
-            out.println("{\"action\": \"login\", \"body\":{\"login\":\"login2\",\"password\":\"haslo2\"}}");
+            out.println("{\"action\": \"login\", \"body\":{\"login\":\"admin\",\"password\":\"admin\"}}");
             String status = in.readLine();
             LOGGER.info("STATUS: " + status);
 
@@ -132,6 +132,18 @@ public class Client {
             out.println(messageJson5);
             String messagesList = in.readLine();
             System.out.println(messagesList);
+
+            File file6 = new File("get_unreaded_json.txt");
+            CharSource source6 = Files.asCharSource(file6, Charsets.UTF_8);
+            String messageJson6 = source6.read();
+
+            out.println(messageJson6);
+            String unreadMessages = in.readLine();
+            System.out.println(unreadMessages);
+
+            out.println(messageJson6);
+            unreadMessages = in.readLine();
+            System.out.println(unreadMessages);
 
 
             while(true){

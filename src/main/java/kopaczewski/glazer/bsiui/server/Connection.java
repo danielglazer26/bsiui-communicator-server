@@ -34,7 +34,7 @@ public class Connection {
     private PrivateKey sessionPrivateKey;
     private BufferedReader socketReader;
     private PrintWriter socketWriter;
-    private final boolean debugOn = false;
+    private final boolean debugOn = true;
     private final int port;
     public static final long NotSignInUser = -1L;
 
@@ -62,7 +62,7 @@ public class Connection {
             generateKeys();
             startCommunicationWithClient();
         } catch (IOException | NoSuchAlgorithmException e) {
-            LOGGER.info("CONNECTION START ERROR");
+            LOGGER.error("CONNECTION START ERROR");
         }
     }
 
@@ -85,6 +85,7 @@ public class Connection {
 
     private void startCommunicationWithClient() throws IOException {
         try {
+            clientSocket.setSoTimeout(2000);
             socketReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             socketWriter = new PrintWriter(clientSocket.getOutputStream(), true);
             if (makeHandshake()) {
@@ -93,7 +94,7 @@ public class Connection {
                 makeClientAction(accountId);
             }
         } catch (IOException e) {
-            LOGGER.info("CAN'T INITIALIZE I/O");
+            LOGGER.error("CAN'T INITIALIZE I/O");
         }
 
     }
@@ -114,7 +115,6 @@ public class Connection {
 
             if( id != null){
                 if (isUserSignIn(id)) {
-                    socketWriter.println("{\"status\":\"logged\"}");
                     LOGGER.info("USER " + id + " LOGGED IN ON PORT " + port);
                     return id;
                 }
@@ -177,22 +177,22 @@ public class Connection {
                                 LOGGER.info("CLIENT VERIFIED ON PORT = " + port);
                                 return true;
                             } catch (Exception e) {
-                                LOGGER.info("CONTROL HASH CODE ERROR");
+                                LOGGER.error("CONTROL HASH CODE ERROR");
                             }
                         } catch (Exception e) {
-                            LOGGER.info("CONTROL MESSAGE DECODE ERROR");
+                            LOGGER.error("CONTROL MESSAGE DECODE ERROR");
                         }
                     } catch (IOException e) {
-                        LOGGER.info("CLIENT DOESN'T SEND CONTROL MESSAGE");
+                        LOGGER.error("CLIENT DOESN'T SEND CONTROL MESSAGE");
                     }
                 } catch (Exception e) {
-                    LOGGER.info("SESSION KEY ENCRYPTION ERROR");
+                    LOGGER.error("SESSION KEY ENCRYPTION ERROR");
                 }
             } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-                LOGGER.info("CAN'T CREATE KEY FROM STRING");
+                LOGGER.error("CAN'T CREATE KEY FROM STRING");
             }
         } catch (IOException e) {
-            LOGGER.info("CLIENT DOESN'T SEND KEY");
+            LOGGER.error("CLIENT DOESN'T SEND KEY");
         }
         return false;
     }

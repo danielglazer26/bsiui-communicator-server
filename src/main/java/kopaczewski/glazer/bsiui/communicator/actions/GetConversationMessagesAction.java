@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 import static kopaczewski.glazer.bsiui.ConstStorage.KEY_CONVERSATION;
-import static kopaczewski.glazer.bsiui.communicator.actions.data.MessageDTO.messageParser;
+import static kopaczewski.glazer.bsiui.communicator.actions.dto.DataParser.parseMessages;
 
 @Component("getConversationMessages")
 public class GetConversationMessagesAction extends CommunicatorActions {
@@ -29,17 +29,17 @@ public class GetConversationMessagesAction extends CommunicatorActions {
         JSONObject jsonObject = getBodyFromJson(body);
 
         // ogarnąć error dla nieistniejących
-        try{
+        try {
             jsonObject.getString(KEY_CONVERSATION);
             List<Message> messages = messageService.getAllMessagesForConversation(jsonObject.getString(KEY_CONVERSATION));
             return new JSONObject(
                     new ResponseDataWithBody(
                             HttpStatus.OK,
                             "List of messages was send",
-                            new GetConversationResponseBody(messageParser(messages))
+                            new GetConversationResponseBody(parseMessages(messages))
                     )
             );
-        }catch( JSONException e){
+        } catch (JSONException e) {
             return new JSONObject(
                     new ResponseData(
                             HttpStatus.BAD_REQUEST,

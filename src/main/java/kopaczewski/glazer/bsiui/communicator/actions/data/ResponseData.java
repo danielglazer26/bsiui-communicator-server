@@ -1,11 +1,9 @@
 package kopaczewski.glazer.bsiui.communicator.actions.data;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.springframework.http.HttpStatus;
 
-@Getter
-@Setter
+@Data
 public class ResponseData {
     protected int status;
     protected String response;

@@ -28,9 +28,10 @@ public class TestDatabase {
 
     @PostConstruct
     public void start() {
-        Person person = personService.createNewPerson("login", "haslo");
-        Person person2 = personService.createNewPerson("login2", "haslo2");
-        Person person3 = personService.createNewPerson("login2", "haslo2");
+        Person person = personService.createNewPerson("login", "login");
+        Person person2 = personService.createNewPerson("admin", "admin");
+        Person person3 = personService.createNewPerson("root", "root");
+/*        Person person3 = personService.createNewPerson("login2", "haslo2");
         if (Objects.isNull(person3)) {
             System.out.println("person3 is Null");
         }
@@ -46,6 +47,6 @@ public class TestDatabase {
         messageService.getAllUnreadMessages(person2.getLogin()).forEach(message -> System.out.println(message.getConversation().getName() + " " + message.getMessage()));
         System.out.println("Liczba zaktualizowanych kolumn: " + messageService.updateReadMessageStatus(
                 person.getLogin(),
-                messageService.getAllUnreadMessages(person.getLogin())));
+                messageService.getAllUnreadMessages(person.getLogin())));*/
     }
 }
