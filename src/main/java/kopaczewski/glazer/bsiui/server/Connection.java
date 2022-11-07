@@ -4,11 +4,13 @@ import com.google.common.hash.Hashing;
 import kopaczewski.glazer.bsiui.communicator.actions.CommunicatorActions;
 import kopaczewski.glazer.bsiui.communicator.actions.LoginAction;
 import kopaczewski.glazer.bsiui.communicator.actions.data.ResponseData;
+import kopaczewski.glazer.bsiui.encryption.AES;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
+import javax.crypto.SecretKey;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -37,6 +39,7 @@ public class Connection {
     private final boolean debugOn = true;
     private final int port;
     public static final long NotSignInUser = -1L;
+    private SecretKey clientPublicKeyAES;
 
     public Connection(Socket socket, int port) {
         clientSocket = socket;
@@ -78,7 +81,11 @@ public class Connection {
         if (communicatorOptions.containsKey(actionName)) {
             LOGGER.info("USER " + accountId + " PERFORMED " + actionName + " WITH " + message);
             JSONObject returnedData = communicatorOptions.get(actionName).runAction(message, accountId);
-            socketWriter.println(returnedData.toString());
+            try {
+                socketWriter.println(AES.decrypt(returnedData.toString(), clientPublicKeyAES));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
         return NotSignInUser;
     }
@@ -89,14 +96,25 @@ public class Connection {
             socketReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             socketWriter = new PrintWriter(clientSocket.getOutputStream(), true);
             if (makeHandshake()) {
-                clientSocket.setSoTimeout(600000);// 10 min
-                Long accountId = makeUserAuthorization();
-                makeClientAction(accountId);
+                if (getAESkeys()) {
+                    clientSocket.setSoTimeout(600000);// 10 min
+                    Long accountId = makeUserAuthorization();
+                    makeClientAction(accountId);
+                }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("CAN'T INITIALIZE I/O");
         }
 
+    }
+
+    private boolean getAESkeys() throws Exception {
+        String aesKeys = socketReader.readLine();
+        LOGGER.error(aesKeys);
+        String encryptedAESkey = decryptHugeText(aesKeys, sessionPrivateKey);
+        LOGGER.error(encryptedAESkey);
+        clientPublicKeyAES = AES.secretKeyFromString(encryptedAESkey);
+        return true;
     }
 
     private Long runCommunicationLoop(LoopLambdaActionValidator loopLambdaActionValidator) throws IOException {
@@ -107,13 +125,19 @@ public class Connection {
                 continue;
             }
 
+            try {
+                message = AES.encrypt(message, clientPublicKeyAES);
+            } catch (Exception e) {
+                LOGGER.error("Bład przy formatowaniu");
+            }
+
             JSONObject json = new JSONObject(message);
 
             String actionName = json.getString(KEY_ACTION);
 
             Long id = loopLambdaActionValidator.checkActionValidation(message, actionName);
 
-            if( id != null){
+            if (id != null) {
                 if (isUserSignIn(id)) {
                     LOGGER.info("USER " + id + " LOGGED IN ON PORT " + port);
                     return id;
@@ -132,14 +156,22 @@ public class Connection {
         if (authorizationOptions.containsKey(actionName)) {
             CommunicatorActions communicatorActions = authorizationOptions.get(actionName);
             returnedData = communicatorActions.runAction(message, NotSignInUser);
-            socketWriter.println(returnedData.toString());
+            try {
+                socketWriter.println(AES.decrypt(returnedData.toString(), clientPublicKeyAES));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             if (actionName.equals(KEY_LOGIN)) {
                 return ((LoginAction) communicatorActions).getAccountId();
             }
         } else {
             returnedData = new JSONObject(new ResponseData(HttpStatus.BAD_REQUEST, "You have to be sign in"));
-            socketWriter.println(returnedData.toString());
+            try {
+                socketWriter.println(AES.decrypt(returnedData.toString(), clientPublicKeyAES));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
         return NotSignInUser;
     }
