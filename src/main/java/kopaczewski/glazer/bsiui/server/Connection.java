@@ -30,6 +30,8 @@ import static kopaczewski.glazer.bsiui.server.encryption.Encryption.*;
 public class Connection {
     private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
     public static final String KEY_ACTION = "action";
+    public static final int SESSION_TIMEOUT_10_MIN = 600000;
+    public static final int WAITING_TIME_FOR_GREETINGS = 15000;
     private final Socket clientSocket;
     private PublicKey sessionPublicKey;
     private PrivateKey sessionPrivateKey;
@@ -87,12 +89,12 @@ public class Connection {
 
     private void startCommunicationWithClient() {
         try {
-            clientSocket.setSoTimeout(15000);
+            clientSocket.setSoTimeout(WAITING_TIME_FOR_GREETINGS);
             socketReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             socketWriter = new PrintWriter(clientSocket.getOutputStream(), true);
             if (makeHandshake()) {
                 if (getAesKey()) {
-                    clientSocket.setSoTimeout(600000);// 10 min
+                    clientSocket.setSoTimeout(SESSION_TIMEOUT_10_MIN);// 10 min
                     Long accountId = makeUserAuthorization();
                     makeClientAction(accountId);
                 }
