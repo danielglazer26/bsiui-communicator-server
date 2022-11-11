@@ -31,7 +31,7 @@ public class Connection {
     private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
     public static final String KEY_ACTION = "action";
     public static final int SESSION_TIMEOUT_10_MIN = 600000;
-    public static final int WAITING_TIME_FOR_GREETINGS = 15000;
+    public static final int WAITING_FOR_CONNECTION_ON_NEW_PORT = 15000;
     private final Socket clientSocket;
     private PublicKey sessionPublicKey;
     private PrivateKey sessionPrivateKey;
@@ -89,7 +89,7 @@ public class Connection {
 
     private void startCommunicationWithClient() {
         try {
-            clientSocket.setSoTimeout(WAITING_TIME_FOR_GREETINGS);
+            clientSocket.setSoTimeout(WAITING_FOR_CONNECTION_ON_NEW_PORT);
             socketReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             socketWriter = new PrintWriter(clientSocket.getOutputStream(), true);
             if (makeHandshake()) {
@@ -104,7 +104,6 @@ public class Connection {
         } catch (Exception e) {
             LOGGER.error("CLIENT COMMUNICATION ERROR", e);
         }
-
     }
 
     private boolean getAesKey() {
