@@ -7,10 +7,10 @@ import java.util.List;
 @Data
 public class ConversationDTO {
     private final String name;
-    private final List<String> names;
+    private final List<String> users;
 
-    public ConversationDTO(String name, List<String> names) {
+    public ConversationDTO(String name, List<String> users) {
         this.name = name;
-        this.names = names;
+        this.users = users;
     }
 }
